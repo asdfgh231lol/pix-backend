@@ -15,6 +15,8 @@ app.post('/gerar-pix', async (req, res) => {
     return res.status(400).json({ error: 'O campo "value" deve ser um número válido.' });
   }
 
+  const valorCentavos = Math.round(value * 100);
+
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
 
   const options = {
@@ -24,13 +26,13 @@ app.post('/gerar-pix', async (req, res) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      amount: value,
+      amount: valorCentavos,
       paymentMethod: "pix",
       items: [
         {
           title: "Produto Teste",
           quantity: 1,
-          unitPrice: value,
+          unitPrice: valorCentavos,
           tangible: false
         }
       ],
