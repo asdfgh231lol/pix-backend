@@ -15,7 +15,6 @@ app.post('/gerar-pix', async (req, res) => {
     return res.status(400).json({ error: 'O campo "value" deve ser um número válido.' });
   }
 
-  // Converte para centavos (inteiro)
   const valorCentavos = Math.round(value * 100);
 
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
@@ -38,9 +37,12 @@ app.post('/gerar-pix', async (req, res) => {
         }
       ],
       customer: {
-        name: "seu nome",
-        email: "seuemail@email.com",
-        document: "12345678909"  // Coloque seu CPF ou CNPJ válido aqui
+        name: "Gabriel Vieira",
+        email: "gabriel@email.com",
+        document: {
+          number: "16695900701",
+          type: "cpf"
+        }
       }
     })
   };
