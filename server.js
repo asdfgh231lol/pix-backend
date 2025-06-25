@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET_KEY = 'sk_BNxMiQ3aJv8DpDYnHnKLkx3Lv160kHZW0YvpXhI1fv2sLAF8'; // coloque sua chave real aqui
+const SECRET_KEY = process.env.SECRET_KEY; // coloque sua chave real aqui
 
 app.post('/gerar-pix', async (req, res) => {
   const { valor } = req.body;
