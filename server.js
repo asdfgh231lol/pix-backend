@@ -28,14 +28,15 @@ app.post('/gerar-pix', async (req, res) => {
       paymentMethod: "pix",
       items: [
         {
-          name: "Produto Teste",
+          title: "Produto Teste",
           quantity: 1,
-          unitPrice: value
+          unitPrice: value,
+          tangible: false
         }
       ],
       customer: {
-        name: "Gabriel Vieira",
-        email: "gabriel@email.com"
+        name: "bosta liquida",
+        email: "joao@email.com"
       }
     })
   };
