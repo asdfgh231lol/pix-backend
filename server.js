@@ -1,15 +1,19 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // importe aqui
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET_KEY = process.env.SECRET_KEY; // coloque sua chave real aqui
+const SECRET_KEY = process.env.SECRET_KEY;
 
 app.post('/gerar-pix', async (req, res) => {
-  const { valor } = req.body;
+  const { value } = req.body;
+
+  if (!value || typeof value !== 'number') {
+    return res.status(400).json({ error: 'O campo "value" deve ser um número válido.' });
+  }
 
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
 
@@ -20,8 +24,8 @@ app.post('/gerar-pix', async (req, res) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      value: valor,
-      description: `Pagamento de R$${valor}`,
+      value: value,
+      description: `Pagamento de R$${value}`,
       external_id: 'pedido_' + Date.now()
     })
   };
@@ -36,7 +40,7 @@ app.post('/gerar-pix', async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error(error);
+    console.error('Erro interno no servidor:', error);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
