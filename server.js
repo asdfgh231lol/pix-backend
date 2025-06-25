@@ -1,3 +1,13 @@
+const express = require('express');
+const fetch = require('node-fetch');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const SECRET_KEY = process.env.SECRET_KEY;
+
 app.post('/gerar-pix', async (req, res) => {
   const { value } = req.body;
 
@@ -18,14 +28,14 @@ app.post('/gerar-pix', async (req, res) => {
       paymentMethod: "pix",
       items: [
         {
-          name: "Vaquinha",
+          name: "Produto Teste",
           quantity: 1,
           unitPrice: value
         }
       ],
       customer: {
-        name: "Bosta Liquida",
-        email: "joao@email.com"
+        name: "Gabriel Vieira",
+        email: "gabriel@email.com"
       }
     })
   };
@@ -43,4 +53,9 @@ app.post('/gerar-pix', async (req, res) => {
     console.error('Erro interno no servidor:', error);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
