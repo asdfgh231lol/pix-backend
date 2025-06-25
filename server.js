@@ -1,5 +1,5 @@
 const express = require('express');
-const fetch = require('node-fetch'); // importe aqui
+const fetch = require('node-fetch'); // versão 2.x, importante
 const cors = require('cors');
 
 const app = express();
@@ -18,7 +18,7 @@ app.post('/gerar-pix', async (req, res) => {
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
 
   const options = {
-    method: "POST",
+    method: 'POST',
     headers: {
       authorization: 'Basic ' + auth,
       'Content-Type': 'application/json'
