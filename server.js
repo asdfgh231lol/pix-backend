@@ -1,13 +1,3 @@
-const express = require('express');
-const fetch = require('node-fetch'); // importar node-fetch
-const cors = require('cors');
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-const SECRET_KEY = process.env.SECRET_KEY;
-
 app.post('/gerar-pix', async (req, res) => {
   const { value } = req.body;
 
@@ -24,12 +14,18 @@ app.post('/gerar-pix', async (req, res) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      value: value,
-      description: `Pagamento de R$${value}`,
-      external_id: 'pedido_' + Date.now(),
+      amount: value,
+      paymentMethod: "pix",
+      items: [
+        {
+          name: "Vaquinha",
+          quantity: 1,
+          unitPrice: value
+        }
+      ],
       customer: {
         name: "Bosta Liquida",
-        email: "jachegouaqui@email.com"
+        email: "joao@email.com"
       }
     })
   };
@@ -47,9 +43,4 @@ app.post('/gerar-pix', async (req, res) => {
     console.error('Erro interno no servidor:', error);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
 });
