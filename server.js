@@ -1,5 +1,5 @@
 const express = require('express');
-const fetch = require('node-fetch'); // para usar fetch no Node.js
+const fetch = require('node-fetch'); // importar node-fetch
 const cors = require('cors');
 
 const app = express();
@@ -17,27 +17,21 @@ app.post('/gerar-pix', async (req, res) => {
 
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
 
-  const body = {
-    amount: value,
-    paymentMethod: "pix",
-    items: [
-      {
-        name: "Pagamento via Pix",
-        quantity: 1,
-        unit_price: value
-      }
-    ],
-    description: `Pagamento de R$${value}`,
-    external_id: 'pedido_' + Date.now()
-  };
-
   const options = {
     method: "POST",
     headers: {
       authorization: 'Basic ' + auth,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify({
+      value: value,
+      description: `Pagamento de R$${value}`,
+      external_id: 'pedido_' + Date.now(),
+      customer: {
+        name: "Bosta Liquida",
+        email: "jachegouaqui@email.com"
+      }
+    })
   };
 
   try {
