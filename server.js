@@ -6,18 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Pega a chave da API do ambiente
-const SECRET_KEY = process.env.SECRET_KEY;
-
-if (!SECRET_KEY) {
-  console.error('⚠️ SECRET_KEY não configurada no ambiente! O servidor vai parar.');
-  process.exit(1); // Para o servidor para evitar rodar sem chave
-}
+const SECRET_KEY = 'ed7e892';
 
 app.post('/gerar-pix', async (req, res) => {
   const { value } = req.body;
 
-  // Validação simples do valor
   if (!value || typeof value !== 'number' || value <= 0) {
     return res.status(400).json({ error: 'O campo "value" deve ser um número válido e maior que zero.' });
   }
@@ -25,7 +18,6 @@ app.post('/gerar-pix', async (req, res) => {
   const valorCentavos = Math.round(value * 100);
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
 
-  // Corpo da requisição para API Master Pagamentos
   const body = {
     amount: valorCentavos,
     paymentMethod: "pix",
@@ -40,6 +32,7 @@ app.post('/gerar-pix', async (req, res) => {
     customer: {
       name: "Gabriel Vieira",
       email: "gabriel@email.com",
+      phone: "21999999999", // ← Adicionado aqui!
       document: {
         number: "16695900701",
         type: "cpf"
@@ -65,7 +58,6 @@ app.post('/gerar-pix', async (req, res) => {
       return res.status(response.status).json({ error: data.message || 'Erro ao gerar pagamento' });
     }
 
-    // Retorna os dados importantes para o frontend
     return res.json({
       pix: data.pix,
       secureUrl: data.secureUrl,
@@ -77,7 +69,6 @@ app.post('/gerar-pix', async (req, res) => {
   }
 });
 
-// Configura porta para ambiente ou padrão 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
