@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET_KEY = 'ed7e892';
+const SECRET_KEY = 'ed7e892'; // sua chave fixa aqui
 
 app.post('/gerar-pix', async (req, res) => {
   const { value } = req.body;
@@ -32,7 +32,7 @@ app.post('/gerar-pix', async (req, res) => {
     customer: {
       name: "Gabriel Vieira",
       email: "gabriel@email.com",
-      phone: "21999999999", // ← Adicionado aqui!
+      phone: "21999999999", // Campo necessário
       document: {
         number: "16695900701",
         type: "cpf"
