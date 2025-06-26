@@ -30,11 +30,11 @@ app.post('/gerar-pix', async (req, res) => {
       }
     ],
     customer: {
-      name: "Gabriel Vieira",
-      email: "gabriel@email.com",
-      phone: "27996959606", // Campo necessário
+      name: "Joao Marcos",
+      email: "fididu@email.com",
+      phone: "2199247957", // Campo necessário
       document: {
-        number: "16695900701",
+        number: "27646849839",
         type: "cpf"
       }
     }
