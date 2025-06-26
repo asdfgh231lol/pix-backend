@@ -6,12 +6,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔐 Aqui você pode trocar por 'dd4f544' se for testar local
-const SECRET_KEY = process.env.SECRET_KEY || 'dd4f544';
-
-if (!SECRET_KEY) {
-  throw new Error('A variável SECRET_KEY não está definida.');
-}
+// Chave da API Master Pagamentos fixa aqui
+const SECRET_KEY = 'dd4f544';
 
 app.post('/gerar-pix', async (req, res) => {
   const { value } = req.body;
@@ -62,7 +58,6 @@ app.post('/gerar-pix', async (req, res) => {
       return res.status(response.status).json({ error: data.message || 'Erro ao gerar pagamento' });
     }
 
-    // Retorna apenas os dados relevantes para o frontend
     return res.json({
       pix: data.pix,
       secureUrl: data.secureUrl,
@@ -76,4 +71,5 @@ app.post('/gerar-pix', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
