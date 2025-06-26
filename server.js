@@ -6,8 +6,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Chave da API Master Pagamentos fixa aqui
-const SECRET_KEY = 'dd4f544';
+// Chave da API Master Pagamentos hardcoded
+const SECRET_KEY = 'cdb78ad';
 
 app.post('/gerar-pix', async (req, res) => {
   const { value } = req.body;
