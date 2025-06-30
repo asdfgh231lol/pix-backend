@@ -9,7 +9,12 @@ app.use(express.json());
 const SECRET_KEY = process.env.SECRET_KEY; // Defina no Render ou localmente
 
 app.post('/gerar-pix', async (req, res) => {
-  const { valor } = req.body;
+  const { valor } = req.body; // valor em CENTAVOS, ex: 1500 = R$15,00
+
+  // Verifica se valor está presente e é um número inteiro válido
+  if (!valor || isNaN(valor) || !Number.isInteger(valor)) {
+    return res.status(400).json({ error: "Campo 'valor' é obrigatório e deve ser um número inteiro em centavos." });
+  }
 
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
 
@@ -20,8 +25,8 @@ app.post('/gerar-pix', async (req, res) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      value: valor,
-      description: `Pagamento de R$${valor}`,
+      value: valor, // valor em centavos (int)
+      description: `Pagamento de R$${(valor / 100).toFixed(2)}`,
       external_id: 'pedido_' + Date.now(),
       paymentMethod: "pix",
       customer: {
@@ -32,7 +37,15 @@ app.post('/gerar-pix', async (req, res) => {
           number: "28062080846",
           type: "cpf"
         }
-      }
+      },
+      items: [
+        {
+          title: "Produto Exemplo",
+          unitPrice: valor,
+          quantity: 1,
+          tangible: true
+        }
+      ]
     })
   };
 
