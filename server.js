@@ -1,101 +1,195 @@
+require('dotenv').config(); // Adicione esta linha aqui
+
+const express = require('express');
 const fetch = require('node-fetch');
+const cors = require('cors');
 
-// Configurações de teste
-const API_BASE_URL = 'http://localhost:10000';
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-// Dados de teste
-const dadosTeste = {
-  valor: 1000, // R$ 10,00 em centavos
-  nome: 'João da Silva',
-  email: 'joao@gmail.com',
-  telefone: '65992251655',
-  cpf: '97098238090'
-};
+// Verificação das variáveis de ambiente
+const SECRET_KEY = process.env.SECRET_KEY;
+const POSTBACK_URL = process.env.POSTBACK_URL || 'https://seusite.com/postback';
 
-async function testarAPI() {
-  console.log('🧪 Iniciando testes da API...\n');
+if (!SECRET_KEY) {
+  console.error('ERRO: SECRET_KEY não foi definida nas variáveis de ambiente');
+  process.exit(1);
+}
+
+// Função para validar CPF (básica)
+function validarCPF(cpf) {
+  // Remove caracteres não numéricos
+  cpf = cpf.replace(/[^\d]/g, '');
+
+  // Verifica se tem 11 dígitos
+  if (cpf.length !== 11) return false;
+
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+
+  return true;
+}
+
+// Função para validar email
+function validarEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+// Função para validar telefone (formato brasileiro básico)
+function validarTelefone(telefone) {
+  // Remove caracteres não numéricos
+  const tel = telefone.replace(/[^\d]/g, '');
+
+  // Verifica se tem 10 ou 11 dígitos (com DDD)
+  return tel.length >= 10 && tel.length <= 11;
+}
+
+app.post('/gerar-pix', async (req, res) => {
+  const { valor, nome, email, telefone, cpf } = req.body;
+
+  // Validação dos campos obrigatórios
+  if (!valor || !nome || !email || !telefone || !cpf) {
+    return res.status(400).json({
+      error: 'Campos obrigatórios faltando',
+      required: ['valor', 'nome', 'email', 'telefone', 'cpf']
+    });
+  }
+
+  // Validações específicas
+  if (!validarCPF(cpf)) {
+    return res.status(400).json({ error: 'CPF inválido' });
+  }
+
+  if (!validarEmail(email)) {
+    return res.status(400).json({ error: 'Email inválido' });
+  }
+
+  if (!validarTelefone(telefone)) {
+    return res.status(400).json({ error: 'Telefone inválido' });
+  }
+
+  if (typeof valor !== 'number' || valor <= 0) {
+    return res.status(400).json({ error: 'Valor deve ser um número positivo em centavos' });
+  }
+
+  // Preparação da autenticação
+  const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
+
+  // Corpo da requisição conforme documentação da API
+  const body = {
+    amount: valor, // Valor em centavos
+    paymentMethod: 'pix',
+    customer: {
+      name: nome,
+      email: email,
+      phone: telefone,
+      document: {
+        number: cpf.replace(/[^\d]/g, ''), // Remove formatação do CPF
+        type: 'cpf'
+      }
+    },
+    items: [
+      {
+        title: 'Pagamento PIX',
+        unitPrice: valor,
+        quantity: 1,
+        tangible: false
+      }
+    ],
+    pix: {
+      expiresInDays: 2
+    },
+    postbackUrl: POSTBACK_URL,
+    traceable: false
+  };
 
   try {
-    // Teste 1: Verificar status da API
-    console.log('1️⃣ Testando endpoint de status...');
-    const statusResponse = await fetch(`${API_BASE_URL}/status`);
-    const statusData = await statusResponse.json();
-
-    if (statusResponse.ok) {
-      console.log('✅ Status OK:', statusData);
-    } else {
-      console.log('❌ Erro no status:', statusData);
-    }
-    console.log('');
-
-    // Teste 2: Testar geração de PIX com dados válidos
-    console.log('2️⃣ Testando geração de PIX com dados válidos...');
-    const pixResponse = await fetch(`${API_BASE_URL}/gerar-pix`, {
+    console.log('Enviando requisição para Master Pagamentos:', {
+      url: 'https://api.masterpagamentosbr.com/v1/transactions',
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dadosTeste)
+      body: JSON.stringify(body, null, 2)
     });
 
-    const pixData = await pixResponse.json();
-
-    if (pixResponse.ok) {
-      console.log('✅ PIX gerado com sucesso:', pixData);
-    } else {
-      console.log('❌ Erro ao gerar PIX:', pixData);
-    }
-    console.log('');
-
-    // Teste 3: Testar com dados inválidos (CPF)
-    console.log('3️⃣ Testando com CPF inválido...');
-    const dadosInvalidos = { ...dadosTeste, cpf: '123' };
-    const invalidResponse = await fetch(`${API_BASE_URL}/gerar-pix`, {
+    const response = await fetch('https://api.masterpagamentosbr.com/v1/transactions', {
       method: 'POST',
       headers: {
+        'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(dadosInvalidos)
+      body: JSON.stringify(body)
     });
 
-    const invalidData = await invalidResponse.json();
+    const data = await response.json();
 
-    if (!invalidResponse.ok) {
-      console.log('✅ Validação funcionando:', invalidData);
-    } else {
-      console.log('❌ Validação falhou:', invalidData);
-    }
-    console.log('');
-
-    // Teste 4: Testar com campos faltando
-    console.log('4️⃣ Testando com campos obrigatórios faltando...');
-    const dadosIncompletos = { valor: 1000, nome: 'João' };
-    const incompleteResponse = await fetch(`${API_BASE_URL}/gerar-pix`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dadosIncompletos)
+    console.log('Resposta da API:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: data
     });
 
-    const incompleteData = await incompleteResponse.json();
+    if (!response.ok) {
+      console.error('Erro da API Master Pagamentos:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: data
+      });
 
-    if (!incompleteResponse.ok) {
-      console.log('✅ Validação de campos obrigatórios funcionando:', incompleteData);
-    } else {
-      console.log('❌ Validação de campos obrigatórios falhou:', incompleteData);
+      return res.status(response.status).json({
+        error: 'Erro na API Master Pagamentos',
+        details: data,
+        status: response.status
+      });
     }
 
-  } catch (error) {
-    console.error('❌ Erro durante os testes:', error.message);
-    console.log('\n💡 Certifique-se de que a API está rodando em', API_BASE_URL);
+    // Sucesso - retorna os dados da transação
+    res.json({
+      success: true,
+      transaction: data,
+      message: 'PIX gerado com sucesso'
+    });
+
+  } catch (err) {
+    console.error('Erro interno na requisição:', err);
+
+    res.status(500).json({
+      error: 'Erro interno no servidor',
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
   }
-}
+});
 
-// Executar testes se o arquivo for chamado diretamente
-if (require.main === module) {
-  testarAPI();
-}
+// Endpoint para verificar status da API
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'online',
+    timestamp: new Date().toISOString(),
+    environment: {
+      SECRET_KEY_DEFINED: !!SECRET_KEY,
+      POSTBACK_URL: POSTBACK_URL
+    }
+  });
+});
 
-module.exports = { testarAPI };
+// Endpoint para receber postbacks (webhook)
+app.post('/postback', (req, res) => {
+  console.log('Postback recebido:', req.body);
+
+  // Aqui você pode processar as atualizações de status da transação
+  // Por exemplo: atualizar banco de dados, enviar notificações, etc.
+
+  res.status(200).json({ received: true });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Status: http://localhost:${PORT}/status`);
+  console.log(`Gerar PIX: POST http://localhost:${PORT}/gerar-pix`);
+  console.log(`Postback: POST http://localhost:${PORT}/postback`);
+});
+
+module.exports = app;
 
