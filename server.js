@@ -29,7 +29,7 @@ app.post('/gerar-pix', async (req, res) => {
       email: 'gabriel@email.com',
       phone: '11999999999',
       document: {
-        number: '12345678910',
+        number: '28062080846',
         type: 'cpf'
       },
       address: {
