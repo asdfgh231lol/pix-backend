@@ -6,47 +6,34 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET_KEY = 'sk_live_v2Q9kTcgVp92SAl7Q87UarEQeXXnqvg4mtCoUufvJI'; // sua chave fixa aqui
+const SECRET_KEY = process.env.SECRET_KEY; // Defina no Render ou localmente
 
 app.post('/gerar-pix', async (req, res) => {
-  const { value } = req.body;
+  const { valor } = req.body;
 
-  if (!value || typeof value !== 'number' || value <= 0) {
-    return res.status(400).json({ error: 'O campo "value" deve ser um número válido e maior que zero.' });
-  }
-
-  const valorCentavos = Math.round(value * 100);
   const auth = Buffer.from(`${SECRET_KEY}:x`).toString('base64');
-
-  const body = {
-    amount: valorCentavos,
-    paymentMethod: "pix",
-    items: [
-      {
-        title: "Produto Teste",
-        quantity: 1,
-        unitPrice: valorCentavos,
-        tangible: false
-      }
-    ],
-    customer: {
-      name: "Joao Marcos",
-      email: "fididu@email.com",
-      phone: "2199247957", // Campo necessário
-      document: {
-        number: "27646849839",
-        type: "cpf"
-      }
-    }
-  };
 
   const options = {
     method: "POST",
     headers: {
-      Authorization: 'Basic ' + auth,
+      authorization: 'Basic ' + auth,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify({
+      value: valor,
+      description: `Pagamento de R$${valor}`,
+      external_id: 'pedido_' + Date.now(),
+      paymentMethod: "pix",
+      customer: {
+        name: "João Teste",
+        email: "joao@email.com",
+        phone: "11999999999",
+        document: {
+          number: "28062080846",
+          type: "cpf"
+        }
+      }
+    })
   };
 
   try {
@@ -54,18 +41,14 @@ app.post('/gerar-pix', async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Erro da API Master Pagamentos:', data);
-      return res.status(response.status).json({ error: data.message || 'Erro ao gerar pagamento' });
+      console.error("Erro da API Master Pagamentos:", data);
+      return res.status(response.status).json(data);
     }
 
-    return res.json({
-      pix: data.pix,
-      secureUrl: data.secureUrl,
-      amount: data.amount
-    });
+    res.json(data);
   } catch (error) {
-    console.error('Erro interno no servidor:', error);
-    return res.status(500).json({ error: 'Erro interno no servidor' });
+    console.error("Erro interno no servidor:", error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
 
