@@ -6,12 +6,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SECRET_KEY = process.env.SECRET_KEY; // Defina no Render ou localmente
+const SECRET_KEY = process.env.SECRET_KEY; // Defina essa variável no Render
 
 app.post('/gerar-pix', async (req, res) => {
-  const { valor } = req.body; // valor em CENTAVOS, ex: 1500 = R$15,00
+  const { valor } = req.body;
 
-  // Verifica se valor está presente e é um número inteiro válido
+  // Verifica se o valor é válido
   if (!valor || isNaN(valor) || !Number.isInteger(valor)) {
     return res.status(400).json({ error: "Campo 'valor' é obrigatório e deve ser um número inteiro em centavos." });
   }
@@ -25,7 +25,7 @@ app.post('/gerar-pix', async (req, res) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      value: valor, // valor em centavos (int)
+      value: valor, // valor em centavos, ex: 1000 = R$10,00
       description: `Pagamento de R$${(valor / 100).toFixed(2)}`,
       external_id: 'pedido_' + Date.now(),
       paymentMethod: "pix",
@@ -65,7 +65,8 @@ app.post('/gerar-pix', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// 🚨 ESSA LINHA É ESSENCIAL para funcionar no Render
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
