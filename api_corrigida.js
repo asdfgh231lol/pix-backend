@@ -1,3 +1,5 @@
+require('dotenv').config(); // Adicione esta linha aqui
+
 const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
@@ -181,7 +183,7 @@ app.post('/postback', (req, res) => {
   res.status(200).json({ received: true });
 });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${PORT}`);
   console.log(`Status: http://localhost:${PORT}/status`);
@@ -190,3 +192,4 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
+
