@@ -62,7 +62,7 @@ app.post('/gerar-pix', async (req, res) => {
     customer: {
       name: nome,
       email: email,
-      phone: telefone,
+      phone: telefone.replace(/[^\d]/g, ""),
       document: {
         number: cpf.replace(/[^\d]/g, ''),
         type: 'cpf'
